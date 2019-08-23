@@ -39,7 +39,8 @@ module axi_adc_trigger #(
 
   // parameters
 
-  parameter SIGN_BITS = 2) (
+  parameter SIGN_BITS = 2,
+  parameter OUT_PIN_HOLD_N = 100000) (
 
   // interface
 
@@ -247,24 +248,31 @@ module axi_adc_trigger #(
   // trigger out is acknowledged by the hold counter will be disregarded for 1ms.
   // This was done to avoid noise created by high frequency switches on long
   // wires.
+
   always @(posedge clk) begin
     // trigger_o[0] hold start
     if ((trigger_o_m[0] != trigger_o_m_1[0]) & (trig_o_hold_cnt_0 == 17'd0)) begin
-      trig_o_hold_cnt_0 <= 17'd100000;
+      trig_o_hold_cnt_0 <= OUT_PIN_HOLD_N;
       trig_o_hold_0 <= trigger_o_m[0];
     end
     if (trig_o_hold_cnt_0 != 17'd0) begin
       trig_o_hold_cnt_0 <= trig_o_hold_cnt_0 - 17'd1;
+    end else if (trig_o_hold_0 != trigger_o_m_1[0]) begin
+      trig_o_hold_cnt_0 <= OUT_PIN_HOLD_N;
+      trig_o_hold_0 <= ~trig_o_hold_0;
     end
     trigger_o_m_1[0] <= trigger_o_m[0];
 
     // trigger_o[1] hold start
     if ((trigger_o_m[1] != trigger_o_m_1[1]) & (trig_o_hold_cnt_1 == 17'd0)) begin
-      trig_o_hold_cnt_1 <= 17'd100000;
+      trig_o_hold_cnt_1 <= OUT_PIN_HOLD_N;
       trig_o_hold_1 <= trigger_o_m[1];
     end
     if (trig_o_hold_cnt_1 != 17'd0) begin
       trig_o_hold_cnt_1 <= trig_o_hold_cnt_1 - 17'd1;
+    end else if (trig_o_hold_0 != trigger_o_m_1[1]) begin
+      trig_o_hold_cnt_1 <= OUT_PIN_HOLD_N;
+      trig_o_hold_1 <= ~trig_o_hold_1;
     end
     trigger_o_m_1[1] <= trigger_o_m[1];
 
